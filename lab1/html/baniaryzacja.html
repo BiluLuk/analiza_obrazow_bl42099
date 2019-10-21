@@ -6,7 +6,7 @@
    <!--
 This HTML was auto-generated from MATLAB code.
 To make changes, update the MATLAB code and republish this document.
-      --><title>baniaryzacja</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-10-07"><meta name="DC.source" content="baniaryzacja.m"><style type="text/css">
+      --><title>baniaryzacja</title><meta name="generator" content="MATLAB 9.5"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2019-10-21"><meta name="DC.source" content="baniaryzacja.m"><style type="text/css">
 html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
 
 html { min-height:100%; margin-bottom:1px; }
@@ -66,65 +66,144 @@ table td { padding:7px 5px; text-align:left; vertical-align:top; border:1px soli
 
 
 
-  </style></head><body><div class="content"><pre class="codeinput">clear <span class="string">all</span>;
+  </style></head><body><div class="content"><h2>Contents</h2><div><ul><li><a href="#2">OTSU</a></li><li><a href="#3">Palety barw</a></li><li><a href="#4">Propagowanie adaptacyjne</a></li><li><a href="#5">Binaryzacja obrazu zaszumionego</a></li><li><a href="#6">implementacja innych metod binaryzacji</a></li><li><a href="#7">Wynik</a></li></ul></div><pre class="codeinput">clear <span class="string">all</span>;
+image = imread(<span class="string">"Koala.jpg"</span>);
 
-image1 = imread(<span class="string">'Koala.jpg'</span>);
-image2 = rgb2gray(image1);
 
-cv_image = cv.cvtColor(image1,<span class="string">'RGB2XYZ'</span>);<span class="comment">%zmianan palety barw na ciexyz, imshow nie wyswietli tego bo nie jest rgb</span>
-luminancja=cv_image(:,:,2);<span class="comment">%wyci&#261;gamy luminancje</span>
-th_cv=graythresh(luminancja)*255;<span class="comment">%matoda otsu</span>
+image_nois = imnoise(image, <span class="string">'salt &amp; pepper'</span>); <span class="comment">%zaszumienie obrazka zad 4</span>
+img_gray_nois = rgb2gray(image_nois);
+<span class="comment">%imshow(image);</span>
 
-th=116;<span class="comment">%pr&oacute;g binaryzacji</span>
-<span class="comment">% th=graythresh(image2)*255;%matoda otsu</span>
+<span class="comment">% to gray</span>
+img_gray = rgb2gray(image);
+img_hist = imhist(img_gray);
+<span class="comment">%bar(img_hist);</span>
+<span class="comment">%imshow(img_gray);</span>
 
-image3 = image2 &gt; th; <span class="comment">%binaryzacja przez skalar</span>
-image_cv = image2 &gt; th_cv; <span class="comment">%binaryzacja przez skalar</span>
-histogram=imhist(image2);<span class="comment">%histogram</span>
+<span class="comment">% binaryzacja</span>
+TW = 116; <span class="comment">%pr&oacute;g binaryzacji</span>
+img_bin = img_gray &gt; TW;
+<span class="comment">%imshow(img_bin);</span>
+</pre><h2 id="2">OTSU</h2><p>Zadanie 1.1</p><pre class="codeinput"><span class="comment">% wyznaczanie progu binaryzacji metoda Otsu</span>
+th = graythresh(img_gray)*255;
+</pre><h2 id="3">Palety barw</h2><p>Zadanie 1.2 colormap</p><pre class="codeinput">img_cvt = cv.cvtColor(image, <span class="string">'RGB2XYZ'</span>); <span class="comment">%zmiana palety barw</span>
+Y = img_cvt(:, :, 2); <span class="comment">%wyb&oacute;r palety jasno&#347;ci</span>
+img_cvt_th = graythresh(Y)*255; <span class="comment">%otsu obrazu</span>
+img_cvt_bin = Y &gt; img_cvt_th; <span class="comment">%binaryzacja</span>
 
-image_xor=bitxor(image3,image_cv);
 
-suma=sum(image_xor,<span class="string">'all'</span>);
+img_xor = bitxor(img_cvt_bin, img_bin); <span class="comment">%xorowanie macierzy w celu znalezienia r&oacute;&#380;nic</span>
+imshow(img_xor);
 
-<span class="comment">% bar(histogram);%szukamy siod&#322;a, pr&oacute;g binaryzacji, dolina miedzy maksimami</span>
-<span class="comment">% figure();</span>
-
-imshow(image3);
-figure();
-imshow(image_xor);
+diffCount = sum(img_xor, <span class="string">'all'</span>); <span class="comment">%suma element&oacute;w</span>
 </pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 67% 
-</pre><pre class="codeoutput error">Error using matlab.ui.Figure/set
-Invalid or deleted object.
-Error in imshow (line 348)
-    set(fig_handle, 'NextPlot', 'replacechildren')
-Error in baniaryzacja (line 24)
-imshow(image3);</pre><p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
+</pre><img vspace="5" hspace="5" src="baniaryzacja_01.png" alt=""> <h2 id="4">Propagowanie adaptacyjne</h2><p>Zadanie 1.3</p><p>progowanie funkcja cv.adaptiveThreshold</p><pre class="codeinput">img_adapt_mean = cv.adaptiveThreshold(img_gray, <span class="string">'BlockSize'</span>, 11);
+imshow(img_adapt_mean);
+<span class="comment">% figure(2);</span>
+img_adapt_gauss = cv.adaptiveThreshold(img_gray, <span class="string">'Method'</span>, <span class="string">'Gaussian'</span>, <span class="string">'BlockSize'</span>, 11);
+imshow(img_adapt_gauss);
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 67% 
+Warning: Image is too big to fit on screen; displaying at 67% 
+</pre><h2 id="5">Binaryzacja obrazu zaszumionego</h2><p>Metoda Otsu</p><pre class="codeinput">TW = 116; <span class="comment">%pr&oacute;g binaryzacji</span>
+img_bin_nois = img_gray_nois &gt; TW;
+<span class="comment">%imshow(img_bin_nois);</span>
+</pre><h2 id="6">implementacja innych metod binaryzacji</h2><pre class="codeinput"><span class="comment">%Zadanie 1.5</span>
+
+imshow(sauvola(img_gray,[100 100]))
+<span class="comment">% figure(3);</span>
+imshow(niblack(img_gray))
+</pre><pre class="codeoutput">Warning: Image is too big to fit on screen; displaying at 67% 
+Warning: Image is too big to fit on screen; displaying at 67% 
+</pre><img vspace="5" hspace="5" src="baniaryzacja_03.png" alt=""> <h2 id="7">Wynik</h2><p>Metody Sauvola, Niblacka, Otsu</p><pre class="codeinput">figure
+subplot(131)
+imshow(sauvola(img_gray,[100 100]))
+subplot(132)
+imshow(niblack(img_gray))
+subplot(133)
+imshow(img_bin)
+</pre><img vspace="5" hspace="5" src="baniaryzacja_04.png" alt=""> <p class="footer"><br><a href="https://www.mathworks.com/products/matlab/">Published with MATLAB&reg; R2018b</a><br></p></div><!--
 ##### SOURCE BEGIN #####
 clear all;
+image = imread("Koala.jpg");
+ 
+ 
+image_nois = imnoise(image, 'salt & pepper'); %zaszumienie obrazka zad 4
+img_gray_nois = rgb2gray(image_nois);
+%imshow(image);
+ 
+% to gray
+img_gray = rgb2gray(image);
+img_hist = imhist(img_gray);
+%bar(img_hist);
+%imshow(img_gray);
+ 
+% binaryzacja
+TW = 116; %próg binaryzacji
+img_bin = img_gray > TW;
+%imshow(img_bin);
+ 
+%% OTSU
+% Zadanie 1.1
+ 
+ 
+% wyznaczanie progu binaryzacji metoda Otsu
+th = graythresh(img_gray)*255;
 
-image1 = imread('Koala.jpg');
-image2 = rgb2gray(image1);
+ 
+%% Palety barw
+% Zadanie 1.2
+% colormap
+ 
+img_cvt = cv.cvtColor(image, 'RGB2XYZ'); %zmiana palety barw
+Y = img_cvt(:, :, 2); %wybór palety jasności
+img_cvt_th = graythresh(Y)*255; %otsu obrazu
+img_cvt_bin = Y > img_cvt_th; %binaryzacja
+ 
+ 
+img_xor = bitxor(img_cvt_bin, img_bin); %xorowanie macierzy w celu znalezienia różnic
+imshow(img_xor);
+ 
+diffCount = sum(img_xor, 'all'); %suma elementów
 
-cv_image = cv.cvtColor(image1,'RGB2XYZ');%zmianan palety barw na ciexyz, imshow nie wyswietli tego bo nie jest rgb
-luminancja=cv_image(:,:,2);%wyciągamy luminancje
-th_cv=graythresh(luminancja)*255;%matoda otsu
+ 
+ 
+%% Propagowanie adaptacyjne
+% Zadanie 1.3
+%
+% progowanie funkcja cv.adaptiveThreshold
+ 
+img_adapt_mean = cv.adaptiveThreshold(img_gray, 'BlockSize', 11);
+imshow(img_adapt_mean);
+% figure(2);
+img_adapt_gauss = cv.adaptiveThreshold(img_gray, 'Method', 'Gaussian', 'BlockSize', 11);
+imshow(img_adapt_gauss);
 
-th=116;%próg binaryzacji 
-% th=graythresh(image2)*255;%matoda otsu
+%% Binaryzacja obrazu zaszumionego
+% Metoda Otsu
 
-image3 = image2 > th; %binaryzacja przez skalar
-image_cv = image2 > th_cv; %binaryzacja przez skalar
-histogram=imhist(image2);%histogram
+TW = 116; %próg binaryzacji
+img_bin_nois = img_gray_nois > TW;
+%imshow(img_bin_nois);
+ 
+%% implementacja innych metod binaryzacji
+%Zadanie 1.5
+ 
+imshow(sauvola(img_gray,[100 100]))
+% figure(3);
+imshow(niblack(img_gray))
 
-image_xor=bitxor(image3,image_cv);
+%% Wynik
+% Metody Sauvola, Niblacka, Otsu
+figure
+subplot(131)
+imshow(sauvola(img_gray,[100 100]))
+subplot(132)
+imshow(niblack(img_gray))
+subplot(133)
+imshow(img_bin)
 
-suma=sum(image_xor,'all');
 
-% bar(histogram);%szukamy siodła, próg binaryzacji, dolina miedzy maksimami
-% figure();
 
-imshow(image3);
-figure();
-imshow(image_xor);
+
 ##### SOURCE END #####
 --></body></html>
