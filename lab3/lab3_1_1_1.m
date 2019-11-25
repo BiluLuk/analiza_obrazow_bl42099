@@ -1,4 +1,3 @@
-clear all;
 close all;
  
 img = imread('mono_figury.bmp');
@@ -21,16 +20,16 @@ for n=r
     pole_m = pole_m + index_label(n);
 end
 
-%  imshow(edge(B));
+ imshow(edge(B));
 
 [row, col] = find(edge(B));
 cir=circiut(edge(B));
 
-function out = circiut(img_in)
-[y, x] = find(img_in)
-
-out = 
-end
+% function out = circiut(img_in)
+% [y, x] = find(img_in)
+% 
+% out = 
+% end
 
 
 function out = edge(B)
