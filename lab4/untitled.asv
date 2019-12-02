@@ -2,11 +2,10 @@ close all;
 clear all;
  
 img = imread('mono_figury.bmp');
-% 
-% img = imread('img4.bmp');
+
 index_label=bwlabel(clear_edges(img));
 
-B=(index_label==1);
+B=(index_label==7);
 imshow(B);
 [row, col] = find(B);
 Lv=max(row)-min(row);
@@ -32,15 +31,7 @@ xy = [x y];
 %wielkoœæ replikacji remat
 rep = size(x);
 ri=mean([x y]);
-rep_vector = repmat(ri,rep);
-
-rii = sum(power(rep_vector - xy,2),'all');
-
-rbb=pole/(sqrt(2*pi*rii));
-
-%wspó³czynnik Haralicka
-
-
+repmat(ri,)
 
 function out = clear_edges(img_in)
    
